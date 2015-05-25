@@ -20,10 +20,6 @@ protected:
     int internal_pheromone; // what this ant releases
     int scared_level; // to create more soldiers
     int external_pheromone; // what this ant is reading to find food
-    bool carrying_food; // to stop reading pheromone and release its own
-
-    int location_x;
-    int location_y;
 
 public:
     Abstract_ants(){
@@ -31,18 +27,6 @@ public:
         internal_pheromone = 0;
         scared_level = 20 + (rand() % 10);
         external_pheromone = 0;
-        carrying_food = false;
-        location_x = 0;
-        location_y = 0;
-    }
-
-    char ant_letter(){
-        return 'X'; // to be overridden by specific ant types
-    }
-
-    void set_positions(int val_x, int val_y){
-        location_x = val_x;
-        location_y = val_y;
     }
 };
 
@@ -50,11 +34,13 @@ public:
     This is a specific type of ant. It is a worker ant.
 */
 class Worker: public Abstract_ants{
-    bool is_carrying_leaves = false;
+    bool finding_food; // to stop reading pheromone and release its own
+    bool leaf_in_radius;
 
 public:
     Worker(){
-        //nothing yet
+        finding_food = true;
+        leaf_in_radius = false;
     }
 
     char ant_letter(){
@@ -70,14 +56,16 @@ public:
 class Containers{
 public:
     char state; //for display on the board
-    int pheromone_level; // pheromone level of the block at given moment
+    int pheromone_food; // food pheromone level of the block at given moment
+    int pheromone_home;// home pheromone level of the block at given moment
     Worker *worker; // will be a pointer to a worker in the given container
     int food_block;
 
     Containers(){
         // Constructor
         this->state = '.';
-        this->pheromone_level = 0;
+        this->pheromone_food = 0;
+        this->pheromone_home = 0;
         this->food_block = 0;
         this->worker = NULL;
     }
@@ -110,9 +98,14 @@ public:
         this->state = '.';
     }
 
-    void increase_pheromone(){
+    void increase_pheromone_food(){
         // increases the pheromone level by one when called
-        this->pheromone_level++;
+        this->pheromone_food++;
+    }
+
+    void increase_pheromone_home(){
+        // increases the pheromone level by one when called
+        this->pheromone_home++;
     }
 
     char current_state(){
@@ -129,6 +122,7 @@ public:
 class World{
     //variables
     Containers container_world[array_width][array_height];
+    Worker workers[];
 
 public:
     //constructor
@@ -170,6 +164,24 @@ public:
             }
         }
     }
+
+    void add_workers(int num){
+        // adding workers to array and map
+        for(int i=0; i<num; i++){
+            int horizontal_pos = rand()%array_width;
+            int vertical_pos = rand()%array_height;
+            while(container_world[horizontal_pos][vertical_pos].current_state() != '.'){
+                // ensuring the workers are only added to empty areas of the map
+                horizontal_pos = rand()%array_width;
+                vertical_pos = rand()%array_height;
+            };
+
+            Worker worker;
+            // set pointer to worker and the letter on the map
+            container_world[horizontal_pos][vertical_pos].set_worker(worker);
+        }
+
+    }
 };
 
 
@@ -181,6 +193,10 @@ public:
 int main(){
     srand(time(NULL)); // sets up rand
     World the_world; // creates the world
+    the_world.print(); // prints the world
+    the_world.add_workers(10); // adds num workers to the world
+
+    cout << endl;
     the_world.print(); // prints the world
 
     return 0;
