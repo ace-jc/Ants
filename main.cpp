@@ -285,8 +285,6 @@ public:
                 // there was no pheromone around the ant
                 int temptemp = ((rand()%3)-1);
                 int temptemp2 = ((rand()%3)-1);
-//                cout << "temptemp: " << temptemp << endl;
-//                cout << "temptemp2: " << temptemp2 << endl;
                 saved_horizontal += temptemp;
                 saved_vertical += temptemp2;
                 // check for out of bounds again
@@ -305,25 +303,29 @@ public:
                 }
             }
             else{
-                // there was a pheromone around the ant!
+                // there was a pheromone around the ant so move toward the highest pheromone
+                if(best_pheromone_horizontal < 0){ //if best is less make saved horizontal less
+                    saved_horizontal--;
+                }
+                if(best_pheromone_vertical < 0){ //if best is less make saved vertical less
+                    saved_vertical--;
+                }
+                if(best_pheromone_horizontal > 0){ //if best is more make saved horizontal more
+                    saved_horizontal++;
+                }
+                if(best_pheromone_vertical > 0){ //if best is more make saved vertical more
+                    saved_vertical++;
+                }
             }
-
-//            cout << "saved_horizontal: " << saved_horizontal << endl;
-//            cout << "saved_vertical: " << saved_vertical << endl;
-//
-//            cout << "iter->get_horizontal(): " << iter->get_horizontal() << endl;
-//            cout << "iter->get_vertical(): " << iter->get_vertical() << endl;
-
 
             if(container_world[saved_vertical][saved_horizontal].current_state() == '.'){
-//                cout << "inside the critical function if" << endl;
+                // remove worker from the current position on the board
                 container_world[iter->get_vertical()][iter->get_horizontal()].remove_worker();
+                // set worker to new position on the board
                 container_world[saved_vertical][saved_horizontal].set_worker(iter->return_itself());
+                // save the current new position internally to the worker
+                iter->set_position(saved_horizontal, saved_vertical);
             }
-
-
-
-
         }
 
         // will decrease the pheromone amounts across the board
@@ -353,7 +355,7 @@ int main(){
     the_world.print(); // prints the world
 
     the_world.tick();
-    the_world.tick();
+
 
     cout << "After tick" << endl;
     the_world.print(); // prints the world
