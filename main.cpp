@@ -1,9 +1,11 @@
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
+#include <vector>
+#include <Windows.h>
 
-#define array_width 70
-#define array_height 70
+#define array_width 50
+#define array_height 50
 #define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
 #define food_amt 500 // 1 part per food_amt is food
 
@@ -20,6 +22,8 @@ protected:
     int internal_pheromone; // what this ant releases
     int scared_level; // to create more soldiers
     int external_pheromone; // what this ant is reading to find food
+    int horizontal_pos;
+    int vertical_pos;
 
 public:
     Abstract_ants(){
@@ -27,6 +31,21 @@ public:
         internal_pheromone = 0;
         scared_level = 20 + (rand() % 10);
         external_pheromone = 0;
+        horizontal_pos = 0;
+        vertical_pos = 0;
+    }
+
+    void set_position(int hori, int vert){
+        this->horizontal_pos = hori;
+        this->vertical_pos = vert;
+    }
+
+    int get_horizontal(){
+        return this->horizontal_pos;
+    }
+
+    int get_vertical(){
+        return this->vertical_pos;
     }
 };
 
@@ -45,6 +64,10 @@ public:
 
     char ant_letter(){
         return 'W';
+    }
+
+    Worker return_itself(){
+        return *this;
     }
 };
 
@@ -98,14 +121,33 @@ public:
         this->state = '.';
     }
 
+    int current_pheromone_food(){
+        // increases the pheromone level by one when called
+        return this->pheromone_food;
+    }
+
     void increase_pheromone_food(){
         // increases the pheromone level by one when called
-        this->pheromone_food++;
+        pheromone_food++;
+    }
+
+    void decrease_pheromone_food(){
+        // decreases the pheromone level by one when called
+        if(this->pheromone_food){
+            this->pheromone_food--;
+        }
     }
 
     void increase_pheromone_home(){
         // increases the pheromone level by one when called
         this->pheromone_home++;
+    }
+
+    void decrease_pheromone_home(){
+        // increases the pheromone level by one when called
+        if(pheromone_home){
+            this->pheromone_home--;
+        }
     }
 
     char current_state(){
@@ -122,7 +164,8 @@ public:
 class World{
     //variables
     Containers container_world[array_width][array_height];
-    Worker workers[];
+    vector<Worker> workers_list; //  will contain all of the active workers
+
 
 public:
     //constructor
@@ -168,19 +211,129 @@ public:
     void add_workers(int num){
         // adding workers to array and map
         for(int i=0; i<num; i++){
-            int horizontal_pos = rand()%array_width;
-            int vertical_pos = rand()%array_height;
-            while(container_world[horizontal_pos][vertical_pos].current_state() != '.'){
+            int vertical_pos = rand()%array_width;
+            int horizontal_pos = rand()%array_height;
+            while(container_world[vertical_pos][horizontal_pos].current_state() != '.'){
                 // ensuring the workers are only added to empty areas of the map
-                horizontal_pos = rand()%array_width;
-                vertical_pos = rand()%array_height;
+                vertical_pos = rand()%array_width;
+                horizontal_pos = rand()%array_height;
             };
 
             Worker worker;
+            // set the position of the worker internally to each worker
+            worker.set_position(horizontal_pos, vertical_pos);
+            // adding worker to the list of workers maintained in the world
+            workers_list.push_back(worker);
+
+//            cout << horizontal_pos << " " << vertical_pos << endl;
+
             // set pointer to worker and the letter on the map
-            container_world[horizontal_pos][vertical_pos].set_worker(worker);
+            container_world[vertical_pos][horizontal_pos].set_worker(worker);
+        }
+    }
+
+    void tick(){
+        // will cause the board to move forward one tick for all participants
+        vector<Worker>::iterator iter;
+        for(iter = workers_list.begin(); iter!=workers_list.end(); iter++){
+            // iteration of worker list
+            int saved_horizontal = iter->get_horizontal();
+            int saved_vertical = iter->get_vertical();
+            int temp_horizontal_position = iter->get_horizontal();
+            int temp_vertical_position = iter->get_vertical();
+            int upper_temp_horizontal = 0;
+            int upper_temp_vertical = 0;
+            int best_pheromone = 0;
+            int best_pheromone_horizontal = 0;
+            int best_pheromone_vertical = 0;
+
+//            cout << "saved_horizontal: " << saved_horizontal << endl;
+//            cout << "saved_vertical: " << saved_vertical << endl;
+
+            // moving the center of the ant to the upper right hand side of square for analysis
+            // also creating an upper bound to check for corner cases
+            temp_horizontal_position -= 2;
+            temp_vertical_position -= 2;
+            upper_temp_horizontal += 2;
+            upper_temp_vertical += 2;
+            //checking for out of bounds
+            if(temp_horizontal_position < 0){ // horizontally
+                temp_horizontal_position = 0;
+            }
+            if(temp_vertical_position < 0){ // and vertically
+                temp_vertical_position = 0;
+            }
+            if(upper_temp_horizontal >= array_width){
+                upper_temp_horizontal = (array_width-1);
+            }
+            if(upper_temp_vertical >= array_height){
+                upper_temp_vertical = (array_height-1);
+            }
+
+            for(int j=temp_horizontal_position; j<upper_temp_horizontal; j++){
+                for(int k=temp_vertical_position; k<upper_temp_vertical; k++){
+                    int temp_pheromone = container_world[j][k].current_pheromone_food();
+                    if(temp_pheromone > best_pheromone){
+                        best_pheromone = temp_pheromone; // setting the best pheromone to highest amount
+                        best_pheromone_horizontal = j; //
+                        best_pheromone_vertical = k;
+                    }
+                }
+            }
+
+            if((best_pheromone_horizontal == 0) && (best_pheromone_vertical == 0)){
+                // there was no pheromone around the ant
+                int temptemp = ((rand()%3)-1);
+                int temptemp2 = ((rand()%3)-1);
+//                cout << "temptemp: " << temptemp << endl;
+//                cout << "temptemp2: " << temptemp2 << endl;
+                saved_horizontal += temptemp;
+                saved_vertical += temptemp2;
+                // check for out of bounds again
+                // checking for out of bounds
+                if(saved_horizontal < 0){ // horizontally
+                    saved_horizontal = 0;
+                }
+                if(saved_vertical < 0){ // and vertically
+                    saved_vertical = 0;
+                }
+                if(saved_horizontal >= array_width){
+                    saved_horizontal = (array_width-1);
+                }
+                if(saved_vertical >= array_height){
+                    saved_vertical = (array_height-1);
+                }
+            }
+            else{
+                // there was a pheromone around the ant!
+            }
+
+//            cout << "saved_horizontal: " << saved_horizontal << endl;
+//            cout << "saved_vertical: " << saved_vertical << endl;
+//
+//            cout << "iter->get_horizontal(): " << iter->get_horizontal() << endl;
+//            cout << "iter->get_vertical(): " << iter->get_vertical() << endl;
+
+
+            if(container_world[saved_vertical][saved_horizontal].current_state() == '.'){
+//                cout << "inside the critical function if" << endl;
+                container_world[iter->get_vertical()][iter->get_horizontal()].remove_worker();
+                container_world[saved_vertical][saved_horizontal].set_worker(iter->return_itself());
+            }
+
+
+
+
         }
 
+        // will decrease the pheromone amounts across the board
+        // essentially a type of decay
+        for(int i=0; i<array_width; i++){
+            for(int j=0; j<array_height; j++){
+                container_world[i][j].decrease_pheromone_food();
+                container_world[i][j].decrease_pheromone_home();
+            }
+        }
     }
 };
 
@@ -194,9 +347,15 @@ int main(){
     srand(time(NULL)); // sets up rand
     World the_world; // creates the world
     the_world.print(); // prints the world
-    the_world.add_workers(10); // adds num workers to the world
+    the_world.add_workers(20); // adds num workers to the world
 
-    cout << endl;
+    cout << "Workers added" << endl;
+    the_world.print(); // prints the world
+
+    the_world.tick();
+    the_world.tick();
+
+    cout << "After tick" << endl;
     the_world.print(); // prints the world
 
     return 0;
