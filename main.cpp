@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define array_size 70
-#define ant_hill_entry 35 // also includes entry minus 1
+#define array_width 70
+#define array_height 70
 #define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
 #define food_amt 500 // 1 part per food_amt is food
 
@@ -50,6 +50,8 @@ public:
     This is a specific type of ant. It is a worker ant.
 */
 class Worker: public Abstract_ants{
+    bool is_carrying_leaves = false;
+
 public:
     Worker(){
         //nothing yet
@@ -70,34 +72,52 @@ public:
     char state; //for display on the board
     int pheromone_level; // pheromone level of the block at given moment
     Worker *worker; // will be a pointer to a worker in the given container
+    int food_block;
 
     Containers(){
         // Constructor
-        state = '.';
-        pheromone_level = 0;
-        worker = NULL;
+        this->state = '.';
+        this->pheromone_level = 0;
+        this->food_block = 0;
+        this->worker = NULL;
+    }
+
+    void set_food(int incoming_food){
+        this->food_block = incoming_food;
+    }
+
+    void get_food(){
+        this->food_block--;
+        if(!this->food_block){ // food is zero
+            this->set_state('.');
+        }
     }
 
     void set_state(char incoming_char){
         // method to help set the state of the container when ants are removed
-        state = incoming_char;
+        this->state = incoming_char;
     }
 
     void set_worker(Worker incoming_worker){
         // sets the worker address to the given worker
-        worker = &incoming_worker;
-        state = incoming_worker.ant_letter();
+        this->worker = &incoming_worker;
+        this->state = incoming_worker.ant_letter();
     }
 
     void remove_worker(){
         // removes the worker and sets it to null
-        worker = NULL;
-        state = '.';
+        this->worker = NULL;
+        this->state = '.';
     }
 
     void increase_pheromone(){
         // increases the pheromone level by one when called
-        pheromone_level++;
+        this->pheromone_level++;
+    }
+
+    char current_state(){
+        // returns the state of the given container
+        return this->state;
     }
 };
 
@@ -108,71 +128,45 @@ public:
 */
 class World{
     //variables
-    char **world_vars;
-
-
+    Containers container_world[array_width][array_height];
 
 public:
     //constructor
     World(){
         cout << "\t\t\tA 70x70 Ant World" << endl << endl;
-        create_world_helper(); //creating world given size
-    }
-
-    void add_element(Worker ant){
-        // to help position the ant on the board
-        int x = 0;
-        int y = 0;
-        do{
-            x = rand()%array_size;
-            y = rand()%array_size;
-        }while(world_vars[x][y] != '.');
-        ant.set_positions(x, y);
-        world_vars[x][y] = ant.ant_letter(); // added
+        create_ant_hill();
     }
 
     void print(){
-        for(int i=0; i<array_size; i++){
-            for(int j=0; j<array_size; j++){
-                cout << world_vars[i][j];
+        for(int i=0; i<array_width; i++){
+            for(int j=0; j<array_height; j++){
+                cout << container_world[i][j].current_state();
             }
             cout << endl;
         }
     }
 
     void create_ant_hill(){
-        for(int i=0; i<array_size; i++){
-            for(int j=0; j<array_size; j++){
-                if(j == 49 && i != ant_hill_entry-1 && i != ant_hill_entry){
-                    world_vars[i][j] = 'R';
+        for(int i=0; i<array_width; i++){
+            for(int j=0; j<array_height; j++){
+                if(j == (array_width/4*3) && !(i == (array_width/2) || i == ((array_width/2)+1))){
+                    // creating the barrier to the exit and the entrance
+                    // set to 3/4 with and entrance in near middle
+                    container_world[i][j].set_state('R');
                 }
-                if(j > 49){ // Randomly placing rock inside of nest
-                    int temp = rand()%ant_hill_rock; //percent of rocks in any hill
-                    if(temp == 0){ // defines that a rock should be present at the rate given above
-                        world_vars[i][j] = 'R';
+                if(j > (array_width/4*3)){
+                    int tmp = rand()%ant_hill_rock;
+                    if(tmp == 0){
+                        container_world[i][j].set_state('R');
                     }
                 }
-//                if(j < 49){ // Randomly placing rock inside of nest
-//                    int temp = rand()%food_amt; //percent of rocks in any hill
-//                    if(temp == 0){ // defines that a rock should be present at the rate given above
-//                        world_vars[i][j] = 'F';
-//                    }
-//                }
-            }
-        }
-    }
-
-private:
-    void create_world_helper(){
-        world_vars = (char **) calloc(array_size, sizeof(int *));
-        for(int i=0; i<array_size; i++){
-            world_vars[i] = (char *) calloc(array_size, sizeof(char));
-        }
-
-        // Setting all values to '.' period for nothing
-        for(int i=0; i<array_size; i++){
-            for(int j=0; j<array_size; j++){
-                world_vars[i][j] = '.';
+                if(j < (array_width/4*3)){
+                    int tmp = rand()%food_amt; // food amount in part per food_amt defined above
+                    if(tmp == 0){
+                        container_world[i][j].set_food((rand()%50)+1); // set food between 1 and 50
+                        container_world[i][j].set_state('F');
+                    }
+                }
             }
         }
     }
@@ -184,25 +178,10 @@ private:
 /*
     This is the main program for the simulation
 */
-int main()
-{
+int main(){
     srand(time(NULL)); // sets up rand
     World the_world; // creates the world
-    the_world.create_ant_hill(); // adds the ant hill to the right of the map
-
-    the_world.print();
-
-    // Makes workers and adds them to a random place in the map
-    Worker w;
-    Worker x;
-    Worker z;
-    the_world.add_element(w);
-    the_world.add_element(x);
-    the_world.add_element(z);
-
-    cout << endl;
-
-    the_world.print();
+    the_world.print(); // prints the world
 
     return 0;
 }
