@@ -85,6 +85,7 @@ public:
     int pheromone_home;// home pheromone level of the block at given moment
     Worker *worker; // will be a pointer to a worker in the given container
     int food_block;
+    bool entrance;
 
     Containers(){
         // Constructor
@@ -93,6 +94,15 @@ public:
         this->pheromone_home = 0;
         this->food_block = 0;
         this->worker = NULL;
+        this->entrance = false;
+    }
+
+    void set_entrance_true(){
+        this->entrance = true;
+    }
+
+    void set_pheromone_home_amt(int amt){
+        this->pheromone_home = amt;
     }
 
     void set_pheromone_food_amt(int amt){
@@ -134,7 +144,7 @@ public:
 
     void increase_pheromone_food(){
         // increases the pheromone level by one when called
-        pheromone_food++;
+        this->pheromone_food++;
     }
 
     void decrease_pheromone_food(){
@@ -144,6 +154,11 @@ public:
         }
     }
 
+    int current_pheromone_home(){
+        // returns the current pheromone home amount
+        return this->pheromone_home;
+    }
+
     void increase_pheromone_home(){
         // increases the pheromone level by one when called
         this->pheromone_home++;
@@ -151,7 +166,7 @@ public:
 
     void decrease_pheromone_home(){
         // increases the pheromone level by one when called
-        if(pheromone_home){
+        if(this->pheromone_home){
             this->pheromone_home--;
         }
     }
@@ -192,6 +207,10 @@ public:
     void create_ant_hill(){
         for(int i=0; i<array_width; i++){
             for(int j=0; j<array_height; j++){
+                if(j == (array_width/4*3) && (i == (array_width/2) || i == ((array_width/2)+1))){
+                    // setting entrance of the ant hill with high pheromone amount
+                    container_world[i][j].set_pheromone_home_amt(2147483647);
+                }
                 if(j == (array_width/4*3) && !(i == (array_width/2) || i == ((array_width/2)+1))){
                     // creating the barrier to the exit and the entrance
                     // set to 3/4 with and entrance in near middle
@@ -245,128 +264,11 @@ public:
         for(iter = workers_list.begin(); iter!=workers_list.end(); iter++){
             // iteration of worker list
             if(iter->finding_food_status()){
-                // ant is looking for food and chasing high pheromones
-                int saved_horizontal = iter->get_horizontal(); // current horizontal position
-                int saved_vertical = iter->get_vertical(); // current vertical position
-                int temp_horizontal_position = saved_horizontal;
-                int temp_vertical_position = saved_vertical;
-                int upper_temp_horizontal = saved_horizontal;
-                int upper_temp_vertical = saved_vertical;
-                int best_pheromone = 0;
-                int best_pheromone_horizontal = 0;
-                int best_pheromone_vertical = 0;
-//                cout << "BEFORE" << endl;
-//                cout << "temp_horizontal_position: " << temp_horizontal_position << endl;
-//                cout << "temp_vertical_position: " << temp_vertical_position << endl;
-
-                // moving the center of the ant to the upper right hand side of square for analysis
-                // also creating an upper bound to check for corner cases
-                temp_horizontal_position -= 2;
-                temp_vertical_position -= 2;
-                upper_temp_horizontal += 2;
-                upper_temp_vertical += 2;
-
-
-                //checking for out of bounds
-                if(temp_horizontal_position < 0){ // horizontally
-                    temp_horizontal_position = 0;
-                }
-                if(temp_vertical_position < 0){ // and vertically
-                    temp_vertical_position = 0;
-                }
-                if(upper_temp_horizontal >= array_width){
-                    upper_temp_horizontal = (array_width-1);
-                }
-                if(upper_temp_vertical >= array_height){
-                    upper_temp_vertical = (array_height-1);
-                }
-
-//                cout << endl << "AFTER" << endl;
-//                cout << "temp_horizontal_position: " << temp_horizontal_position << endl;
-//                cout << "temp_vertical_position: " << temp_vertical_position << endl;
-//                cout << "upper_temp_horizontal: " << upper_temp_horizontal << endl;
-//                cout << "upper_temp_vertical: " << upper_temp_vertical << endl;
-
-                for(int j=temp_horizontal_position; j<=upper_temp_horizontal; j++){
-                    for(int k=temp_vertical_position; k<=upper_temp_vertical; k++){
-                        char temp_state = container_world[k][j].current_state();
-                        if(temp_state != 'W' && temp_state != 'R'){
-                            //not checking itself
-//                            cout << "hori: " << j << "verti: " << k << endl;
-                            int temp_pheromone = container_world[k][j].current_pheromone_food();
-
-//                            cout << "temp_pheromone amt: " << temp_pheromone << " current state: " << temp_state << endl;
-                            if(temp_pheromone > best_pheromone){
-//                            cout << "THIS WAS SET HERE" << endl;
-                            best_pheromone = temp_pheromone; // setting the best pheromone to highest amount
-                            best_pheromone_horizontal = j; //
-                            best_pheromone_vertical = k;
-                        }
-                        }
-                    }
-                }
-
-                if((best_pheromone_horizontal == 0) && (best_pheromone_vertical == 0)){
-//                        cout << "There were only zeros!!" << endl;
-                    // there was no pheromone around the ant
-                    int temptemp = ((rand()%3)-1);
-                    int temptemp2 = ((rand()%3)-1);
-                    saved_horizontal += temptemp;
-                    saved_vertical += temptemp2;
-                    // check for out of bounds again
-                    // checking for out of bounds
-                    if(saved_horizontal < 0){ // horizontally
-                        saved_horizontal = 0;
-                    }
-                    if(saved_vertical < 0){ // and vertically
-                        saved_vertical = 0;
-                    }
-                    if(saved_horizontal >= array_width){
-                        saved_horizontal = (array_width-1);
-                    }
-                    if(saved_vertical >= array_height){
-                        saved_vertical = (array_height-1);
-                    }
-                }
-                else{
-                    // there was a pheromone around the ant so move toward the highest pheromone
-//                    cout << "There was a pheromone!!" << endl;
-//                    cout << "best_pheromone_horizontal: " << best_pheromone_horizontal << endl; // horizontal position of best food
-//                    cout << "best_pheromone_vertical: " << best_pheromone_vertical << endl; // vertical position of best food
-
-                    if(saved_horizontal != best_pheromone_horizontal){
-                        // only changing if not already in optimal horizontal position
-                        if(best_pheromone_horizontal < saved_horizontal){ //if best is less make saved horizontal less
-                            saved_horizontal--;
-                        }
-                        else{
-                            saved_horizontal++;
-                        }
-                    }
-
-                    if(saved_vertical != best_pheromone_vertical){
-                        // only changing if not already in optimal vertical position
-                        if(best_pheromone_vertical < saved_vertical){ //if best is less make saved vertical less
-                            saved_vertical--;
-                        }
-                        else{
-                            saved_vertical++;
-                        }
-                    }
-                }
-
-                if(container_world[saved_vertical][saved_horizontal].current_state() == '.'){
-                    // remove worker from the current position on the board
-                    container_world[iter->get_vertical()][iter->get_horizontal()].remove_worker();
-                    // set worker to new position on the board
-                    container_world[saved_vertical][saved_horizontal].set_worker(iter->return_itself());
-                    // save the current new position internally to the worker
-                    iter->set_position(saved_horizontal, saved_vertical);
-                }
+                looking_for_food(iter,'F'); // 'F' for looking for food
             }
             else{
-                // ant is looking for home while carrying food and chasing home pheromones
-                cout << "not complete yet" << endl;
+                // ant is looking for entrance while carrying food and chasing home pheromones
+                looking_for_food(iter,'H');
             }
         }
 
@@ -377,6 +279,122 @@ public:
                 container_world[i][j].decrease_pheromone_food();
                 container_world[i][j].decrease_pheromone_home();
             }
+        }
+    }
+
+    void looking_for_food(vector<Worker>::iterator iter, char food_or_home){
+        // ant is looking for food and chasing high pheromones
+        int saved_horizontal = iter->get_horizontal(); // current horizontal position
+        int saved_vertical = iter->get_vertical(); // current vertical position
+        int temp_horizontal_position = saved_horizontal;
+        int temp_vertical_position = saved_vertical;
+        int upper_temp_horizontal = saved_horizontal;
+        int upper_temp_vertical = saved_vertical;
+        int best_pheromone = 0;
+        int best_pheromone_horizontal = 0;
+        int best_pheromone_vertical = 0;
+
+        // moving the center of the ant to the upper right hand side of square for analysis
+        // also creating an upper bound to check for corner cases
+        temp_horizontal_position -= 2;
+        temp_vertical_position -= 2;
+        upper_temp_horizontal += 2;
+        upper_temp_vertical += 2;
+
+        //checking for out of bounds
+        if(temp_horizontal_position < 0){ // horizontally
+            temp_horizontal_position = 0;
+        }
+        if(temp_vertical_position < 0){ // and vertically
+            temp_vertical_position = 0;
+        }
+        if(upper_temp_horizontal >= array_width){
+            upper_temp_horizontal = (array_width-1);
+        }
+        if(upper_temp_vertical >= array_height){
+            upper_temp_vertical = (array_height-1);
+        }
+
+        for(int j=temp_horizontal_position; j<=upper_temp_horizontal; j++){
+            for(int k=temp_vertical_position; k<=upper_temp_vertical; k++){
+                char temp_state = container_world[k][j].current_state();
+                if(temp_state != 'W' && temp_state != 'R'){ //not checking itself
+                    int temp_pheromone = 0;
+                    if(food_or_home == 'F'){ // looks for the highest food pheromone
+                        temp_pheromone = container_world[k][j].current_pheromone_food();
+                    }
+                    else if(food_or_home == 'H'){ // looks for the highest home pheromone
+                        temp_pheromone = container_world[k][j].current_pheromone_home();
+                    }
+                    else{
+                        cout << "ERROR SHOULD NOT BE HERE!" << endl;
+                    }
+
+                    if(temp_pheromone > best_pheromone){
+                    best_pheromone = temp_pheromone; // setting the best pheromone to highest amount
+                    best_pheromone_horizontal = j;
+                    best_pheromone_vertical = k;
+                    }
+                }
+            }
+        }
+
+        if((best_pheromone_horizontal == 0) && (best_pheromone_vertical == 0)){
+//                        cout << "There were only zeros!!" << endl;
+            // there was no pheromone around the ant
+            int temptemp = ((rand()%3)-1);
+            int temptemp2 = ((rand()%3)-1);
+            saved_horizontal += temptemp;
+            saved_vertical += temptemp2;
+            // check for out of bounds again
+            // checking for out of bounds
+            if(saved_horizontal < 0){ // horizontally
+                saved_horizontal = 0;
+            }
+            if(saved_vertical < 0){ // and vertically
+                saved_vertical = 0;
+            }
+            if(saved_horizontal >= array_width){
+                saved_horizontal = (array_width-1);
+            }
+            if(saved_vertical >= array_height){
+                saved_vertical = (array_height-1);
+            }
+        }
+        else{
+            // there was a pheromone around the ant so move toward the highest pheromone
+//                    cout << "There was a pheromone!!" << endl;
+//                    cout << "best_pheromone_horizontal: " << best_pheromone_horizontal << endl; // horizontal position of best food
+//                    cout << "best_pheromone_vertical: " << best_pheromone_vertical << endl; // vertical position of best food
+
+            if(saved_horizontal != best_pheromone_horizontal){
+                // only changing if not already in optimal horizontal position
+                if(best_pheromone_horizontal < saved_horizontal){ //if best is less make saved horizontal less
+                    saved_horizontal--;
+                }
+                else{
+                    saved_horizontal++;
+                }
+            }
+
+            if(saved_vertical != best_pheromone_vertical){
+                // only changing if not already in optimal vertical position
+                if(best_pheromone_vertical < saved_vertical){ //if best is less make saved vertical less
+                    saved_vertical--;
+                }
+                else{
+                    saved_vertical++;
+                }
+            }
+        }
+
+        if(container_world[saved_vertical][saved_horizontal].current_state() == '.'){
+            // remove worker from the current position on the board
+            container_world[iter->get_vertical()][iter->get_horizontal()].remove_worker();
+            // set worker to new position on the board
+            container_world[saved_vertical][saved_horizontal].set_worker(iter->return_itself());
+            // save the current new position internally to the worker
+            iter->set_position(saved_horizontal, saved_vertical);
         }
     }
 };
@@ -396,7 +414,7 @@ int main(){
     cout << "Workers added" << endl;
     the_world.print(); // prints the world
 
-    int time_tick = 2000;
+    int time_tick = 20000;
     while(time_tick){
         the_world.tick();
         time_tick--;
