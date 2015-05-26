@@ -233,6 +233,7 @@ class World{
     Containers container_world[array_width][array_height];
     vector<Worker> workers_list; //  will contain all of the active workers
 
+
 public:
     //constructor
     World(){
@@ -320,7 +321,10 @@ public:
                 horizontal_pos = rand()%array_height;
             };
 
-            Worker worker;
+//            Worker *worker_ptr;
+//            worker_ptr = new worker;
+//            int temp = 5;
+            cout << "temp value: " << temp << " temp address: " << &temp << endl;
             cout << "address of worker: " << &worker << endl;
             // set the position of the worker internally to each worker
             worker.set_position(horizontal_pos, vertical_pos);
@@ -557,7 +561,7 @@ int main(){
     srand(time(NULL)); // sets up rand
 
     cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << endl;
-    World *world_ptr = new World(); // creates the world
+    World *world_ptr = new World(); // creates the world in the heap and assigns the pointer to its location
     world_ptr->print(); // prints the world
     Sleep(2000);
 //    system("cls");
