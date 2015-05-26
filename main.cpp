@@ -4,10 +4,10 @@
 #include <vector>
 #include <Windows.h>
 
-#define array_width 40
-#define array_height 40
+#define array_width 20
+#define array_height 20
 #define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
-#define food_amt 200 // 1 part per food_amt is food
+#define food_amt 20 // 1 part per food_amt is food
 
 using namespace std;
 
@@ -51,11 +51,22 @@ public:
     This is a specific type of ant. It is a worker ant.
 */
 class Worker: public Abstract_ants{
-    bool finding_food; // to stop reading pheromone release its own, and find home pheromone
+    int finding_food; // to stop reading pheromone release its own, and find home pheromone
+    int food_being_carried; // food carried by worker ant
 
 public:
     Worker(){
-        finding_food = true;
+        finding_food = 1;
+        food_being_carried = 0;
+    }
+
+    void set_food_carry(int amt){
+        // sets the amount of food being carried
+        this->food_being_carried = amt;
+    }
+
+    int current_food_being_carried(){
+        return this->food_being_carried;
     }
 
     char ant_letter(){
@@ -63,14 +74,14 @@ public:
     }
 
     void not_finding_food(){
-        this->finding_food = false;
+        this->finding_food = 0;
     }
 
     void is_finding_food(){
-        this->finding_food = true;
+        this->finding_food = 1;
     }
 
-    bool finding_food_status(){
+    int finding_food_status(){
         return finding_food;
     }
 
@@ -85,14 +96,16 @@ public:
     piece of information about the simulation.
 */
 class Containers{
-public:
+private:
     char state; //for display on the board
     int pheromone_food; // food pheromone level of the block at given moment
     int pheromone_home;// home pheromone level of the block at given moment
     Worker *worker; // will be a pointer to a worker in the given container
     int food_block;
     bool entrance;
+    int leaf_for_pickup;
 
+public:
     Containers(){
         // Constructor
         this->state = '.';
@@ -101,6 +114,15 @@ public:
         this->food_block = 0;
         this->worker = NULL;
         this->entrance = false;
+        this->leaf_for_pickup = 0;
+    }
+
+    int current_leaf_for_pickup(){
+        return this->leaf_for_pickup;
+    }
+
+    void add_leaf_for_pickup(int amt){
+        this->leaf_for_pickup += amt;
     }
 
     void set_entrance_true(){
@@ -123,6 +145,11 @@ public:
         this->food_block = incoming_food;
     }
 
+    int current_food(){
+        // returns the current food in the block
+        return this->food_block;
+    }
+
     void get_food(){
         this->food_block--;
         if(!this->food_block){ // food is zero
@@ -134,6 +161,15 @@ public:
     void set_state(char incoming_char){
         // method to help set the state of the container when ants are removed
         this->state = incoming_char;
+    }
+
+    Worker worker_ptr(){
+        if(this->worker == NULL){
+            cout << "NULL POINTER WITH WORKER";
+        }
+        else{
+            return *(this->worker);
+        }
     }
 
     void set_worker(Worker incoming_worker){
@@ -160,7 +196,7 @@ public:
 
     void decrease_pheromone_food(){
         // decreases the pheromone level by one when called
-        if(this->pheromone_food){
+        if(this->pheromone_food){ //only if positive decrease
             this->pheromone_food--;
         }
     }
@@ -177,7 +213,7 @@ public:
 
     void decrease_pheromone_home(){
         // increases the pheromone level by one when called
-        if(this->pheromone_home){
+        if(this->pheromone_home){ //only decrease if positive
             this->pheromone_home--;
         }
     }
@@ -188,7 +224,6 @@ public:
     }
 };
 
-
 /*
     This is the world which will contain all of the board and will display
     the current world.
@@ -198,12 +233,33 @@ class World{
     Containers container_world[array_width][array_height];
     vector<Worker> workers_list; //  will contain all of the active workers
 
-
 public:
     //constructor
     World(){
-        cout << "\t\t\tA 70x70 Ant World" << endl << endl;
         create_ant_hill();
+    }
+
+    void statistics(){
+        vector<Worker>::iterator iter;
+        int food_workers_carry = 0;
+        int food_on_plants = 0;
+        int pickup_at_home = 0;
+
+        for(int i=0; i<array_width; i++){
+            for(int j=0; j<array_height; j++){
+                food_on_plants += container_world[i][j].current_food(); // calculating total food on plants
+                pickup_at_home += container_world[i][j].current_leaf_for_pickup(); // leafs at home needing to be picked up
+            }
+        }
+
+        for(iter = workers_list.begin(); iter!=workers_list.end(); iter++){
+            food_workers_carry += iter->current_food_being_carried();
+        }
+
+        cout << "Total Workers: " << workers_list.size() << endl;
+        cout << "Total food carried by workers: " << food_workers_carry << endl;
+        cout << "Food on plants: " << food_on_plants << endl;
+        cout << "Food to be picked up at home: " << pickup_at_home << endl;
     }
 
     void print(){
@@ -212,6 +268,13 @@ public:
                 cout << container_world[i][j].current_state();
             }
             cout << endl;
+        }
+        statistics();
+        vector<Worker>::iterator iter3;
+        for(iter3 = workers_list.begin(); iter3!=workers_list.end(); iter3++){
+            cout << "iter3->get_horizontal: " << iter3->get_horizontal() << endl;
+            cout << "iter3->get_vertical: " << iter3->get_vertical() << endl;
+            cout << "iter3->finding_food_status: " << iter3->finding_food_status() << endl;
         }
     }
 
@@ -258,13 +321,11 @@ public:
             };
 
             Worker worker;
+            cout << "address of worker: " << &worker << endl;
             // set the position of the worker internally to each worker
             worker.set_position(horizontal_pos, vertical_pos);
             // adding worker to the list of workers maintained in the world
             workers_list.push_back(worker);
-
-//            cout << horizontal_pos << " " << vertical_pos << endl;
-
             // set pointer to worker and the letter on the map
             container_world[vertical_pos][horizontal_pos].set_worker(worker);
         }
@@ -278,18 +339,23 @@ public:
             if(iter->finding_food_status()){
                 // ant is looking for food here
                 if(!one_block_from(iter, 'F')){
-                    // food is further than one block here
+                    //if one block from food it grabs it and doesn't continue looking
                     looking_for_food(iter,'F'); // 'F' for looking for food
                 }
+                // will release pheromones if an ant is looking for home and passes one block away
+                one_block_from(iter, 'B');
             }
             else{
-                // ant is looking for entrance while carrying food and chasing home pheromones
+                // ant is looking for home while carrying food and chasing home pheromones
                 if(!one_block_from(iter, 'H')){
                     // entrance is further than one block here
                     looking_for_food(iter, 'H'); // 'H' for looking for home
                 }
-//                looking_for_food(iter,'H'); // H is for home
+                // will release pheromones if an ant is looking for food and passes one block away
+                one_block_from(iter, 'P');
             }
+
+
         }
 
         // will decrease the pheromone amounts across the board
@@ -303,15 +369,13 @@ public:
     }
 
     bool one_block_from(vector<Worker>::iterator iter, char food_or_home){
+        //food_or_home sets the ant for food if 'F' or home if 'H'
         int saved_horizontal = iter->get_horizontal(); // current horizontal position
         int saved_vertical = iter->get_vertical(); // current vertical position
         int temp_horizontal_position = saved_horizontal;
         int temp_vertical_position = saved_vertical;
         int upper_temp_horizontal = saved_horizontal;
         int upper_temp_vertical = saved_vertical;
-        int best_pheromone = 0;
-        int best_pheromone_horizontal = 0;
-        int best_pheromone_vertical = 0;
 
         // moving the center of the ant to the upper right hand side of square for analysis
         // also creating an upper bound to check for corner cases
@@ -340,28 +404,30 @@ public:
                 if(temp_state != 'R'){ //not checking itself removed this: temp_state != 'W' &&
                     if((food_or_home == 'F') && container_world[k][j].current_state() == 'F'){
                         //I'm looking for food and I've found food within one block
-                        cout << "GETTING FOOD" << endl;
-                        container_world[k][j].get_food();
-                        iter->not_finding_food();
+                        container_world[k][j].get_food(); // reduce the container food by one, pheromone set to zero, state set to '.'
+                        iter->set_food_carry(1); // ant picks up the one unit of food
+                        iter->not_finding_food(); // no longer looking for food, instead looking for home
                         return true;
                     }
                     if((food_or_home == 'H') && container_world[k][j].entrance_status()){
                         // I'm looking for the entrance and it is found one block away from current position
-                        cout << "GOING TO ENTRANCE" << endl;
+//                        cout << "GOING TO ENTRANCE" << endl;
+                        iter->set_food_carry(0); // ant is now not carrying food
+                        container_world[k][j].add_leaf_for_pickup(1); // leaf for pickup is added to the entrance container
                         iter->is_finding_food(); // sets finding food to true
                         return true;
-
                     }
-//                    else{
-//                        cout << "BOO ERROR SHOULD NOT BE HERE!" << endl;
-//                    }
+                    if((food_or_home == 'P') && (temp_state == 'W')){
+                        // will release pheromones if an ant is looking for food and passes one block away
+                        cout << "current_worker_food_status: " << (container_world[k][j].worker_ptr()).finding_food_status() << endl;
+                    }
+                    if((food_or_home == 'B')){
+//                        cout << "NEVER!: " << food_or_home << endl;
+                    }
                 }
             }
         }
     }
-
-
-
 
     void looking_for_food(vector<Worker>::iterator iter, char food_or_home){
         // ant is looking for food and chasing high pheromones
@@ -487,25 +553,33 @@ public:
     This is the main program for the simulation
 */
 int main(){
+    const int worker_ants = 10;
     srand(time(NULL)); // sets up rand
-    World the_world; // creates the world
-    the_world.print(); // prints the world
-    the_world.add_workers(20); // adds num workers to the world
 
-    cout << "Workers added" << endl;
-    the_world.print(); // prints the world
+    cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << endl;
+    World *world_ptr = new World(); // creates the world
+    world_ptr->print(); // prints the world
+    Sleep(2000);
+//    system("cls");
 
-    int time_tick = 1000;
+
+    world_ptr->add_workers(worker_ants); // adds num workers to the world
+    world_ptr->print(); // prints the world
+    Sleep(2000);
+//    system("cls");
+
+
+    int time_tick = 2;
     while(time_tick){
-        the_world.tick();
+        world_ptr->tick();
+        world_ptr->print(); // prints the world
         time_tick--;
-//        cout << endl << endl;
-
-//        Sleep(2000);
+        Sleep(100);
+//        system("cls");
     }
-    cout << "after loop" << endl;
 
-    the_world.print(); // prints the world
+    cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << " - HALTED POSITION!!!" << endl;
+    world_ptr->print(); // prints the world
 
     return 0;
 }
