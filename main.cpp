@@ -578,6 +578,7 @@ int main(){
 //        system("cls");
     }
 
+
     cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << " - HALTED POSITION!!!" << endl;
     world_ptr->print(); // prints the world
 
