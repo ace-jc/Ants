@@ -231,7 +231,7 @@ public:
 class World{
     //variables
     Containers container_world[array_width][array_height];
-    vector<Worker*> workers_list; //  will contain all of the active workers
+    vector<Worker> workers_list; //  will contain all of the active workers
 
 public:
     //constructor
@@ -252,8 +252,8 @@ public:
             }
         }
 
-        for(*iter = workers_list.begin(); *iter!=workers_list.end(); *iter++){
-            food_workers_carry += *iter.current_food_being_carried();
+        for(iter = workers_list.begin(); iter!=workers_list.end(); iter++){
+            food_workers_carry += iter->current_food_being_carried();
         }
 
         cout << "Total Workers: " << workers_list.size() << endl;
@@ -320,13 +320,14 @@ public:
                 horizontal_pos = rand()%array_height;
             };
 
-            Worker *worker_ptr;
+            Worker worker;
+            cout << "address of worker: " << &worker << endl;
             // set the position of the worker internally to each worker
-            worker_ptr->set_position(horizontal_pos, vertical_pos);
+            worker.set_position(horizontal_pos, vertical_pos);
             // adding worker to the list of workers maintained in the world
-            workers_list.push_back(worker_ptr);
+            workers_list.push_back(worker);
             // set pointer to worker and the letter on the map
-            container_world[vertical_pos][horizontal_pos].set_worker(worker_ptr);
+            container_world[vertical_pos][horizontal_pos].set_worker(worker);
         }
     }
 
@@ -552,28 +553,28 @@ public:
     This is the main program for the simulation
 */
 int main(){
-    const int worker_ants = 1;
+    const int worker_ants = 10;
     srand(time(NULL)); // sets up rand
 
     cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << endl;
     World *world_ptr = new World(); // creates the world
     world_ptr->print(); // prints the world
     Sleep(2000);
-    system("cls");
+//    system("cls");
 
 
     world_ptr->add_workers(worker_ants); // adds num workers to the world
     world_ptr->print(); // prints the world
     Sleep(2000);
-    system("cls");
+//    system("cls");
 
 
-    int time_tick = 10;
+    int time_tick = 2;
     while(time_tick){
         world_ptr->tick();
         world_ptr->print(); // prints the world
         time_tick--;
-//        Sleep(100);
+        Sleep(100);
 //        system("cls");
     }
 
