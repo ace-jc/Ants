@@ -4,8 +4,8 @@
 #include <vector>
 #include <Windows.h>
 
-#define array_width 70
-#define array_height 70
+#define array_width 40
+#define array_height 40
 #define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
 #define food_amt 200 // 1 part per food_amt is food
 
@@ -52,16 +52,22 @@ public:
 */
 class Worker: public Abstract_ants{
     bool finding_food; // to stop reading pheromone release its own, and find home pheromone
-    bool leaf_in_radius;
 
 public:
     Worker(){
         finding_food = true;
-        leaf_in_radius = false;
     }
 
     char ant_letter(){
         return 'W';
+    }
+
+    void not_finding_food(){
+        this->finding_food = false;
+    }
+
+    void is_finding_food(){
+        this->finding_food = true;
     }
 
     bool finding_food_status(){
@@ -101,6 +107,10 @@ public:
         this->entrance = true;
     }
 
+    bool entrance_status(){
+        return this->entrance;
+    }
+
     void set_pheromone_home_amt(int amt){
         this->pheromone_home = amt;
     }
@@ -117,6 +127,7 @@ public:
         this->food_block--;
         if(!this->food_block){ // food is zero
             this->set_state('.');
+            this->pheromone_food = 0;
         }
     }
 
@@ -210,6 +221,7 @@ public:
                 if(j == (array_width/4*3) && (i == (array_width/2) || i == ((array_width/2)+1))){
                     // setting entrance of the ant hill with high pheromone amount
                     container_world[i][j].set_pheromone_home_amt(2147483647);
+                    container_world[i][j].set_entrance_true();
                 }
                 if(j == (array_width/4*3) && !(i == (array_width/2) || i == ((array_width/2)+1))){
                     // creating the barrier to the exit and the entrance
@@ -264,11 +276,19 @@ public:
         for(iter = workers_list.begin(); iter!=workers_list.end(); iter++){
             // iteration of worker list
             if(iter->finding_food_status()){
-                looking_for_food(iter,'F'); // 'F' for looking for food
+                // ant is looking for food here
+                if(!one_block_from(iter, 'F')){
+                    // food is further than one block here
+                    looking_for_food(iter,'F'); // 'F' for looking for food
+                }
             }
             else{
                 // ant is looking for entrance while carrying food and chasing home pheromones
-                looking_for_food(iter,'H');
+                if(!one_block_from(iter, 'H')){
+                    // entrance is further than one block here
+                    looking_for_food(iter, 'H'); // 'H' for looking for home
+                }
+//                looking_for_food(iter,'H'); // H is for home
             }
         }
 
@@ -281,6 +301,67 @@ public:
             }
         }
     }
+
+    bool one_block_from(vector<Worker>::iterator iter, char food_or_home){
+        int saved_horizontal = iter->get_horizontal(); // current horizontal position
+        int saved_vertical = iter->get_vertical(); // current vertical position
+        int temp_horizontal_position = saved_horizontal;
+        int temp_vertical_position = saved_vertical;
+        int upper_temp_horizontal = saved_horizontal;
+        int upper_temp_vertical = saved_vertical;
+        int best_pheromone = 0;
+        int best_pheromone_horizontal = 0;
+        int best_pheromone_vertical = 0;
+
+        // moving the center of the ant to the upper right hand side of square for analysis
+        // also creating an upper bound to check for corner cases
+        temp_horizontal_position -= 1;
+        temp_vertical_position -= 1;
+        upper_temp_horizontal += 1;
+        upper_temp_vertical += 1;
+
+        //checking for out of bounds
+        if(temp_horizontal_position < 0){ // horizontally
+            temp_horizontal_position = 0;
+        }
+        if(temp_vertical_position < 0){ // and vertically
+            temp_vertical_position = 0;
+        }
+        if(upper_temp_horizontal >= array_width){
+            upper_temp_horizontal = (array_width-1);
+        }
+        if(upper_temp_vertical >= array_height){
+            upper_temp_vertical = (array_height-1);
+        }
+
+        for(int j=temp_horizontal_position; j<=upper_temp_horizontal; j++){
+            for(int k=temp_vertical_position; k<=upper_temp_vertical; k++){
+                char temp_state = container_world[k][j].current_state();
+                if(temp_state != 'R'){ //not checking itself removed this: temp_state != 'W' &&
+                    if((food_or_home == 'F') && container_world[k][j].current_state() == 'F'){
+                        //I'm looking for food and I've found food within one block
+                        cout << "GETTING FOOD" << endl;
+                        container_world[k][j].get_food();
+                        iter->not_finding_food();
+                        return true;
+                    }
+                    if((food_or_home == 'H') && container_world[k][j].entrance_status()){
+                        // I'm looking for the entrance and it is found one block away from current position
+                        cout << "GOING TO ENTRANCE" << endl;
+                        iter->is_finding_food(); // sets finding food to true
+                        return true;
+
+                    }
+//                    else{
+//                        cout << "BOO ERROR SHOULD NOT BE HERE!" << endl;
+//                    }
+                }
+            }
+        }
+    }
+
+
+
 
     void looking_for_food(vector<Worker>::iterator iter, char food_or_home){
         // ant is looking for food and chasing high pheromones
@@ -318,7 +399,7 @@ public:
         for(int j=temp_horizontal_position; j<=upper_temp_horizontal; j++){
             for(int k=temp_vertical_position; k<=upper_temp_vertical; k++){
                 char temp_state = container_world[k][j].current_state();
-                if(temp_state != 'W' && temp_state != 'R'){ //not checking itself
+                if(temp_state != 'R'){ //not checking itself removed this: temp_state != 'W' &&
                     int temp_pheromone = 0;
                     if(food_or_home == 'F'){ // looks for the highest food pheromone
                         temp_pheromone = container_world[k][j].current_pheromone_food();
@@ -414,7 +495,7 @@ int main(){
     cout << "Workers added" << endl;
     the_world.print(); // prints the world
 
-    int time_tick = 20000;
+    int time_tick = 1000;
     while(time_tick){
         the_world.tick();
         time_tick--;
