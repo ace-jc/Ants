@@ -21,8 +21,9 @@ protected:
     int internal_hungry; // to help create more minima and media workers
     int internal_pheromone; // what this ant releases
     int scared_level; // to create more soldiers
-    int horizontal_pos;
-    int vertical_pos;
+    int horizontal_pos; // horizontal position on the board
+    int vertical_pos; // vertical position on the board
+    int worker_id; // internal worker identifier
 
 public:
     Abstract_ants(){
@@ -31,11 +32,16 @@ public:
         scared_level = 20 + (rand() % 10);
         horizontal_pos = 0;
         vertical_pos = 0;
+        worker_id = 0;
     }
 
     void set_position(int hori, int vert){
         this->horizontal_pos = hori;
         this->vertical_pos = vert;
+    }
+
+    void set_id(int id_set_num){
+        this->worker_id = id_set_num;
     }
 
     int get_horizontal(){
@@ -128,6 +134,7 @@ private:
     int food_block;
     bool entrance;
     int leaf_for_pickup;
+
 
 public:
     Containers(){
@@ -340,6 +347,9 @@ public:
     }
 
     void add_workers(int num){
+        // to set internal unique worker id
+        int internal_worker_id = 0;
+
         // adding workers to array and map
         for(int i=0; i<num; i++){
             int vertical_pos = rand()%array_width;
@@ -355,10 +365,15 @@ public:
 
             // set the position of the worker internally to each worker
             worker_ptr->set_position(horizontal_pos, vertical_pos);
+            // set worker id internal to worker
+            worker_ptr->set_id(internal_worker_id);
+
             // adding worker to the list of workers maintained in the world
             workers_list.push_back(worker_ptr);
             // set pointer to worker and the letter on the map
             container_world[vertical_pos][horizontal_pos].set_worker(worker_ptr); //sending the container world a dereferenced worker pointer
+            // increase worker id for next worker
+            internal_worker_id++;
         }
     }
 
