@@ -4,10 +4,11 @@
 #include <vector>
 #include <Windows.h>
 
-#define array_width 5
-#define array_height 5
+#define array_width 20
+#define array_height 20
 #define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
-#define food_amt 1000 // 1 part per food_amt is food
+#define food_amt 100 // 1 part per food_amt is food
+#define slow_release_amt 150
 
 using namespace std;
 
@@ -67,7 +68,7 @@ public:
         finding_food = true;
         food_being_carried = 0;
         food_slow_release_amt = 0;
-        home_slow_release_amt = 0;
+        home_slow_release_amt = slow_release_amt;
     }
 
     void set_food_carry(int amt){
@@ -84,14 +85,14 @@ public:
     }
 
     void not_finding_food(){
-        this->food_slow_release_amt = 100;
+        this->food_slow_release_amt = slow_release_amt;
         this->home_slow_release_amt = 0;
         this->finding_food = false;
     }
 
     void is_finding_food(){
         this->food_slow_release_amt = 0;
-        this->home_slow_release_amt = 100;
+        this->home_slow_release_amt = slow_release_amt;
         this->finding_food = true;
     }
 
@@ -204,8 +205,8 @@ public:
 
     void sets_pheromone(int incoming_food_amt, int incoming_home_amt){
         // sets the pheromone level by amount currently set at worker
-        this->pheromone_food = incoming_food_amt;
-        this->pheromone_home = incoming_home_amt;
+        this->pheromone_food += incoming_food_amt;
+        this->pheromone_home += incoming_home_amt;
     }
 
     void decrease_pheromone_food(){
@@ -260,6 +261,7 @@ public:
                     container_world[i][j].set_state('R');
                 }
                 if(j > (array_width/4*3)){
+                    // creating rocks inside of the ant hill
                     int tmp = rand()%ant_hill_rock;
                     if(tmp == 0){
                         container_world[i][j].set_state('R');
@@ -329,19 +331,11 @@ public:
 
         // adding workers to array and map
         for(int i=0; i<num; i++){
-            int vertical_pos = rand()%array_width;
-            int horizontal_pos = rand()%array_height;
-            while(container_world[vertical_pos][horizontal_pos].current_state() != '.'){
-                // ensuring the workers are only added to empty areas of the map
-                vertical_pos = rand()%array_width;
-                horizontal_pos = rand()%array_height;
-            };
-
             Worker *worker_ptr; // create a worker pointer
             worker_ptr = new Worker; // create a worker in the heap and save the pointer
 
             // set the position of the worker internally to each worker
-            worker_ptr->set_position(horizontal_pos, vertical_pos);
+            worker_ptr->set_position((array_width/4*3), (array_width/2));
             // set worker id internal to worker
             worker_ptr->set_id(internal_worker_id);
 
@@ -571,28 +565,23 @@ public:
     This is the main program for the simulation
 */
 int main(){
-    const int worker_ants = 2;
+    const int worker_ants = 3;
     srand(time(NULL)); // sets up rand
 
     cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << endl;
     World *world_ptr = new World(); // creates the world in the heap and assigns the pointer to its location
-    world_ptr->print(); // prints the world
-    Sleep(2000);
-    system("cls");
-
-
     world_ptr->add_workers(worker_ants); // adds num workers to the world
     world_ptr->print(); // prints the world
     Sleep(2000);
     system("cls");
 
 
-    int time_tick = 1000;
+    int time_tick = 10000;
     while(time_tick){
         world_ptr->tick();
         world_ptr->print(); // prints the world
         time_tick--;
-        Sleep(500);
+        Sleep(100);
         system("cls");
     }
 
