@@ -4,11 +4,11 @@
 #include <vector>
 #include <Windows.h>
 
-#define array_width 20
-#define array_height 20
+#define array_width 50
+#define array_height 50
 #define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
 #define food_amt 100 // 1 part per food_amt is food
-#define slow_release_amt 150
+#define slow_release_amt 15
 
 using namespace std;
 
@@ -19,7 +19,6 @@ using namespace std;
 class Abstract_ants{
 protected:
     //Variables
-    int internal_hungry; // to help create more minima and media workers
     int internal_pheromone; // what this ant releases
     int scared_level; // to create more soldiers
     int horizontal_pos; // horizontal position on the board
@@ -28,7 +27,6 @@ protected:
 
 public:
     Abstract_ants(){
-        internal_hungry = 50 + (rand() % 10);
         internal_pheromone = 0;
         scared_level = 20 + (rand() % 10);
         horizontal_pos = 0;
@@ -423,7 +421,7 @@ public:
             for(int k=temp_vertical_position; k<=upper_temp_vertical; k++){
                 char temp_state = container_world[k][j].current_state();
                 if(temp_state != 'R'){
-                    if(container_world[k][j].current_state() == 'F'){
+                    if((food_or_home == 'F') && container_world[k][j].current_state() == 'F'){
                         //I'm looking for food and I've found food within one block
                         container_world[k][j].get_food(); // reduce the container food by one, pheromone set to zero, state set to '.'
                         (*iter)->set_food_carry(1); // ant picks up the one unit of food
@@ -500,7 +498,7 @@ public:
     This is the main program for the simulation
 */
 int main(){
-    const int worker_ants = 5;
+    const int worker_ants = 10;
     srand(time(NULL)); // sets up rand
 
     cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << endl;
@@ -511,13 +509,13 @@ int main(){
     system("cls");
 
 
-    int time_tick = 1000;
+    int time_tick = 10000;
     while(time_tick){
         world_ptr->tick();
-        world_ptr->print(); // prints the world
+//        world_ptr->print(); // prints the world
         time_tick--;
-        Sleep(100);
-        system("cls");
+//        Sleep(50);
+//        system("cls");
     }
 
     cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << " - HALTED POSITION!!!" << endl;
