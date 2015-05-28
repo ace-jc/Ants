@@ -8,7 +8,7 @@
 #define array_height 50
 #define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
 #define food_amt 100 // 1 part per food_amt is food
-#define slow_release_amt 15
+#define slow_release_amt 50
 
 using namespace std;
 
@@ -24,6 +24,8 @@ protected:
     int horizontal_pos; // horizontal position on the board
     int vertical_pos; // vertical position on the board
     int worker_id; // internal worker identifier
+    vector<int> last_horizontal_positions; // storing previous positions to avoid
+    vector<int> last_vertical_positions; // storing previous positions to avoid
 
 public:
     Abstract_ants(){
@@ -34,9 +36,34 @@ public:
         worker_id = 0;
     }
 
+    bool is_previous_position(int hori, int vert){
+        //create and iterator for the previous positions check
+        vector<int>::iterator position_iter;
+        vector<int>::iterator position_iter2;
+        for(position_iter = this->last_horizontal_positions.begin(); position_iter!=last_horizontal_positions.end(); position_iter++){
+            for(position_iter2 = this->last_vertical_positions.begin(); position_iter2!=last_vertical_positions.end(); position_iter2++){
+                // over each horizontal position
+                if((*position_iter == hori) && (*position_iter2 == vert)){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
     void set_position(int hori, int vert){
+        // saving current position
         this->horizontal_pos = hori;
         this->vertical_pos = vert;
+
+        // saving previous positions
+        if(last_horizontal_positions.size() > 3){ // keeping a memory of the last three positions
+            this->last_horizontal_positions.erase(last_horizontal_positions.begin()); // erase the first element horizontally
+            this->last_vertical_positions.erase(last_vertical_positions.begin()); // erase the first element vertically
+        }
+        this->last_horizontal_positions.push_back(hori);
+        this->last_vertical_positions.push_back(vert);
     }
 
     void set_id(int id_set_num){
@@ -280,7 +307,23 @@ public:
     void print(){
         for(int i=0; i<array_width; i++){
             for(int j=0; j<array_height; j++){
-                cout << container_world[i][j].current_state();
+                if(container_world[i][j].current_state() == '.'){
+                    if((container_world[i][j].current_pheromone_food() > 0) && (container_world[i][j].current_pheromone_home() > 0)){
+                    cout << 'b';
+                    }
+                    else if((container_world[i][j].current_pheromone_home() > 0)&& (container_world[i][j].current_pheromone_food() == 0)){
+                        cout << 'h';
+                    }
+                    else if((container_world[i][j].current_pheromone_food() > 0) && (container_world[i][j].current_pheromone_home() == 0)){
+                        cout << 'f';
+                    }
+                    else{
+                        cout << container_world[i][j].current_state();
+                    }
+                }
+                else{
+                    cout << container_world[i][j].current_state();
+                }
             }
             cout << endl;
         }
@@ -436,26 +479,29 @@ public:
                         return;
                     }
 
-                    // at this point there was no food or home and move must be made
-                    if((food_or_home == 'F') && (container_world[k][j].current_pheromone_food() > 0)){
-                        // looking for food and found a positive food pheromone, saving it to horizontal_possible_moves
-                        horizontal_possible_moves.push_back(j);
-                        vertical_possible_moves.push_back(k);
-                    }
-                    if((food_or_home == 'H') && (container_world[k][j].current_pheromone_home() > 0)){
-                        // looking for home and found a positive home pheromone, saving it to horizontal_possible_moves
-                        horizontal_possible_moves.push_back(j);
-                        vertical_possible_moves.push_back(k);
-                    }
+                    if(!((*iter)->is_previous_position(j,k))){
+                        // was not a previous position and is a candidate for a move
+                        // at this point there was no food or home and move must be made
+                        if((food_or_home == 'F') && (container_world[k][j].current_pheromone_food() > 0)){
+                            // looking for food and found a positive food pheromone, saving it to horizontal_possible_moves
+                            horizontal_possible_moves.push_back(j);
+                            vertical_possible_moves.push_back(k);
+                        }
+                        if((food_or_home == 'H') && (container_world[k][j].current_pheromone_home() > 0)){
+                            // looking for home and found a positive home pheromone, saving it to horizontal_possible_moves
+                            horizontal_possible_moves.push_back(j);
+                            vertical_possible_moves.push_back(k);
+                        }
 
-                    // no pheromones were found
-                    if((food_or_home == 'F') && (container_world[k][j].current_pheromone_food() == 0)){
-                        no_trail_horizontal_possible_moves.push_back(j);
-                        no_trail_vertical_possible_moves.push_back(k);
-                    }
-                    if((food_or_home == 'H') && (container_world[k][j].current_pheromone_home() == 0)){
-                        no_trail_horizontal_possible_moves.push_back(j);
-                        no_trail_vertical_possible_moves.push_back(k);
+                        // no pheromones were found
+                        if((food_or_home == 'F') && (container_world[k][j].current_pheromone_food() == 0)){
+                            no_trail_horizontal_possible_moves.push_back(j);
+                            no_trail_vertical_possible_moves.push_back(k);
+                        }
+                        if((food_or_home == 'H') && (container_world[k][j].current_pheromone_home() == 0)){
+                            no_trail_horizontal_possible_moves.push_back(j);
+                            no_trail_vertical_possible_moves.push_back(k);
+                        }
                     }
                 }
             }
@@ -512,10 +558,10 @@ int main(){
     int time_tick = 10000;
     while(time_tick){
         world_ptr->tick();
-//        world_ptr->print(); // prints the world
+        world_ptr->print(); // prints the world
         time_tick--;
-//        Sleep(50);
-//        system("cls");
+        Sleep(100);
+        system("cls");
     }
 
     cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << " - HALTED POSITION!!!" << endl;
