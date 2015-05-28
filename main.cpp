@@ -364,17 +364,11 @@ public:
             // iteration of worker list
             if((*iter)->finding_food_status()){
                 // ant is looking for food here
-                if(!one_block_from(iter, 'F')){
-                    //if one block from food it grabs it and doesn't continue looking
-                    looking_for_food_or_home(iter,'F'); // 'F' for looking for food
-                }
+                one_block_from(iter, 'F');
             }
             else{
                 // ant is looking for home while carrying food and chasing home pheromones
-                if(!one_block_from(iter, 'H')){
-                    // entrance is further than one block here
-                    looking_for_food_or_home(iter, 'H'); // 'H' for looking for home
-                }
+                one_block_from(iter, 'H');
             }
 
             // setting 'W' on containers that contain a worker
@@ -391,14 +385,18 @@ public:
         }
     }
 
-    bool one_block_from(vector<Worker *>::iterator iter, char food_or_home){
+    void one_block_from(vector<Worker *>::iterator iter, char food_or_home){
         //food_or_home sets the ant for food if 'F' or home if 'H'
-        int saved_horizontal = (*iter)->get_horizontal(); // current horizontal position
-        int saved_vertical = (*iter)->get_vertical(); // current vertical position
-        int temp_horizontal_position = saved_horizontal;
-        int temp_vertical_position = saved_vertical;
-        int upper_temp_horizontal = saved_horizontal;
-        int upper_temp_vertical = saved_vertical;
+        int new_horizontal = (*iter)->get_horizontal(); // current horizontal position
+        int new_vertical = (*iter)->get_vertical(); // current vertical position
+        int temp_horizontal_position = new_horizontal;
+        int temp_vertical_position = new_vertical;
+        int upper_temp_horizontal = new_horizontal;
+        int upper_temp_vertical = new_vertical;
+        vector<int> horizontal_possible_moves;
+        vector<int> vertical_possible_moves;
+        vector<int> no_trail_horizontal_possible_moves;
+        vector<int> no_trail_vertical_possible_moves;
 
         // moving the center of the ant to the upper right hand side of square for analysis
         // also creating an upper bound to check for corner cases
@@ -424,148 +422,85 @@ public:
         for(int j=temp_horizontal_position; j<=upper_temp_horizontal; j++){
             for(int k=temp_vertical_position; k<=upper_temp_vertical; k++){
                 char temp_state = container_world[k][j].current_state();
-                if(temp_state != 'R'){ //not checking itself removed this: temp_state != 'W' &&
-                    if((food_or_home == 'F') && container_world[k][j].current_state() == 'F'){
+                if(temp_state != 'R'){
+                    if(container_world[k][j].current_state() == 'F'){
                         //I'm looking for food and I've found food within one block
                         container_world[k][j].get_food(); // reduce the container food by one, pheromone set to zero, state set to '.'
                         (*iter)->set_food_carry(1); // ant picks up the one unit of food
                         (*iter)->not_finding_food(); // no longer looking for food, instead looking for home
-                        return true;
+                        return;
                     }
                     if((food_or_home == 'H') && container_world[k][j].entrance_status()){
                         // I'm looking for the entrance and it is found one block away from current position
                         (*iter)->set_food_carry(0); // ant is now not carrying food
                         container_world[k][j].add_leaf_for_pickup(1); // leaf for pickup is added to the entrance container
                         (*iter)->is_finding_food(); // sets finding food to true
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-
-    void looking_for_food_or_home(vector<Worker *>::iterator iter, char food_or_home){
-        // ant is looking for food and chasing high pheromones
-        int saved_horizontal = (*iter)->get_horizontal(); // current horizontal position
-        int saved_vertical = (*iter)->get_vertical(); // current vertical position
-        int temp_horizontal_position = saved_horizontal;
-        int temp_vertical_position = saved_vertical;
-        int upper_temp_horizontal = saved_horizontal;
-        int upper_temp_vertical = saved_vertical;
-        int best_pheromone = 0;
-        int best_pheromone_horizontal = 0;
-        int best_pheromone_vertical = 0;
-
-        // moving the center of the ant to the upper right hand side of square for analysis
-        // also creating an upper bound to check for corner cases
-        temp_horizontal_position -= 2;
-        temp_vertical_position -= 2;
-        upper_temp_horizontal += 2;
-        upper_temp_vertical += 2;
-
-        //checking for out of bounds
-        if(temp_horizontal_position < 0){ // horizontally
-            temp_horizontal_position = 0;
-        }
-        if(temp_vertical_position < 0){ // and vertically
-            temp_vertical_position = 0;
-        }
-        if(upper_temp_horizontal >= array_width){
-            upper_temp_horizontal = (array_width-1);
-        }
-        if(upper_temp_vertical >= array_height){
-            upper_temp_vertical = (array_height-1);
-        }
-
-        for(int j=temp_horizontal_position; j<=upper_temp_horizontal; j++){
-            for(int k=temp_vertical_position; k<=upper_temp_vertical; k++){
-                char temp_state = container_world[k][j].current_state();
-                if(temp_state != 'R'){ //not checking itself removed this: temp_state != 'W' &&
-                    int temp_pheromone = 0;
-                    if(food_or_home == 'F'){ // looks for the highest food pheromone
-                        temp_pheromone = container_world[k][j].current_pheromone_food();
-                    }
-                    else if(food_or_home == 'H'){ // looks for the highest home pheromone
-                        temp_pheromone = container_world[k][j].current_pheromone_home();
-                    }
-                    else{
-                        cout << "ERROR SHOULD NOT BE HERE!" << endl;
+                        return;
                     }
 
-                    if(temp_pheromone > best_pheromone){
-                    best_pheromone = temp_pheromone; // setting the best pheromone to highest amount
-                    best_pheromone_horizontal = j;
-                    best_pheromone_vertical = k;
+                    // at this point there was no food or home and move must be made
+                    if((food_or_home == 'F') && (container_world[k][j].current_pheromone_food() > 0)){
+                        // looking for food and found a positive food pheromone, saving it to horizontal_possible_moves
+                        horizontal_possible_moves.push_back(j);
+                        vertical_possible_moves.push_back(k);
+                    }
+                    if((food_or_home == 'H') && (container_world[k][j].current_pheromone_home() > 0)){
+                        // looking for home and found a positive home pheromone, saving it to horizontal_possible_moves
+                        horizontal_possible_moves.push_back(j);
+                        vertical_possible_moves.push_back(k);
+                    }
+
+                    // no pheromones were found
+                    if((food_or_home == 'F') && (container_world[k][j].current_pheromone_food() == 0)){
+                        no_trail_horizontal_possible_moves.push_back(j);
+                        no_trail_vertical_possible_moves.push_back(k);
+                    }
+                    if((food_or_home == 'H') && (container_world[k][j].current_pheromone_home() == 0)){
+                        no_trail_horizontal_possible_moves.push_back(j);
+                        no_trail_vertical_possible_moves.push_back(k);
                     }
                 }
             }
         }
 
-        if((best_pheromone_horizontal == 0) && (best_pheromone_vertical == 0)){
-//                        cout << "There were only zeros!!" << endl;
-            // there was no pheromone around the ant
-            int temptemp = ((rand()%3)-1);
-            int temptemp2 = ((rand()%3)-1);
-            saved_horizontal += temptemp;
-            saved_vertical += temptemp2;
-            // check for out of bounds again
-            // checking for out of bounds
-            if(saved_horizontal < 0){ // horizontally
-                saved_horizontal = 0;
-            }
-            if(saved_vertical < 0){ // and vertically
-                saved_vertical = 0;
-            }
-            if(saved_horizontal >= array_width){
-                saved_horizontal = (array_width-1);
-            }
-            if(saved_vertical >= array_height){
-                saved_vertical = (array_height-1);
-            }
+        // following food or home pheromone
+        int size_of_possible_moves = horizontal_possible_moves.size();
+        if(size_of_possible_moves > 0){
+            // randomly selecting one of the possible moves following a trail
+            int random_value = rand()%size_of_possible_moves;
+            // new horizontal is one of the possible values
+            new_horizontal = horizontal_possible_moves.at(random_value);
+            // new vertical is one of the possible values
+            new_vertical = vertical_possible_moves.at(random_value);
         }
         else{
-            // there was a pheromone around the ant so move toward the highest pheromone
-            if(saved_horizontal != best_pheromone_horizontal){
-                // only changing if not already in optimal horizontal position
-                if(best_pheromone_horizontal < saved_horizontal){ //if best is less make saved horizontal less
-                    saved_horizontal--;
-                }
-                else{
-                    saved_horizontal++;
-                }
-            }
-
-            if(saved_vertical != best_pheromone_vertical){
-                // only changing if not already in optimal vertical position
-                if(best_pheromone_vertical < saved_vertical){ //if best is less make saved vertical less
-                    saved_vertical--;
-                }
-                else{
-                    saved_vertical++;
-                }
-            }
+            // randomly selecting one of the possible moves not following a trail
+            size_of_possible_moves = no_trail_horizontal_possible_moves.size();
+            // randomly selecting one of the possible moves
+            int random_value = rand()%size_of_possible_moves;
+            // new horizontal is one of the possible values
+            new_horizontal = no_trail_horizontal_possible_moves.at(random_value);
+            // new vertical is one of the possible values
+            new_vertical = no_trail_vertical_possible_moves.at(random_value);
         }
 
         // this is where the worker actually moves to a new container
-        if(container_world[saved_vertical][saved_horizontal].current_state() == '.'){
+        if(container_world[new_vertical][new_horizontal].current_state() == '.'){
             // save the current new position internally to the worker
-            (*iter)->set_position(saved_horizontal, saved_vertical);
+            (*iter)->set_position(new_horizontal, new_vertical);
 
             //sets pheromone food amount on the new position
-            container_world[saved_vertical][saved_horizontal].
-            sets_pheromone((*iter)->food_amt_and_reduce() , (*iter)->home_amt_and_reduce());
+            container_world[new_vertical][new_horizontal].sets_pheromone((*iter)->food_amt_and_reduce() , (*iter)->home_amt_and_reduce());
         }
     }
 };
-
-
 
 
 /*
     This is the main program for the simulation
 */
 int main(){
-    const int worker_ants = 3;
+    const int worker_ants = 5;
     srand(time(NULL)); // sets up rand
 
     cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << endl;
@@ -576,7 +511,7 @@ int main(){
     system("cls");
 
 
-    int time_tick = 10000;
+    int time_tick = 1000;
     while(time_tick){
         world_ptr->tick();
         world_ptr->print(); // prints the world
