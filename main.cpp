@@ -44,10 +44,12 @@ public:
             for(position_iter2 = this->last_vertical_positions.begin(); position_iter2!=last_vertical_positions.end(); position_iter2++){
                 // over each horizontal position
                 if((*position_iter == hori) && (*position_iter2 == vert)){
+//                    cout << "Returning True" << endl;
                     return true;
                 }
             }
         }
+//        cout << "Returning False" << endl;
         return false;
     }
 
@@ -479,7 +481,7 @@ public:
                         return;
                     }
 
-                    if(!((*iter)->is_previous_position(j,k))){
+                    if(   !((*iter)->is_previous_position(j,k))  ){
                         // was not a previous position and is a candidate for a move
                         // at this point there was no food or home and move must be made
                         if((food_or_home == 'F') && (container_world[k][j].current_pheromone_food() > 0)){
@@ -503,12 +505,18 @@ public:
                             no_trail_vertical_possible_moves.push_back(k);
                         }
                     }
+                    else{
+                        //NOTHING
+                    }
                 }
             }
         }
 
         // following food or home pheromone
         int size_of_possible_moves = horizontal_possible_moves.size();
+        // ensuring size of possible non-trail moves is greater than zero
+        size_of_possible_moves = no_trail_horizontal_possible_moves.size();
+
         if(size_of_possible_moves > 0){
             // randomly selecting one of the possible moves following a trail
             int random_value = rand()%size_of_possible_moves;
@@ -517,25 +525,25 @@ public:
             // new vertical is one of the possible values
             new_vertical = vertical_possible_moves.at(random_value);
         }
-        else{
-            // randomly selecting one of the possible moves not following a trail
-            size_of_possible_moves = no_trail_horizontal_possible_moves.size();
-            // randomly selecting one of the possible moves
-            int random_value = rand()%size_of_possible_moves;
-            // new horizontal is one of the possible values
-            new_horizontal = no_trail_horizontal_possible_moves.at(random_value);
-            // new vertical is one of the possible values
-            new_vertical = no_trail_vertical_possible_moves.at(random_value);
-        }
-
-        // this is where the worker actually moves to a new container
-        if(container_world[new_vertical][new_horizontal].current_state() == '.'){
-            // save the current new position internally to the worker
-            (*iter)->set_position(new_horizontal, new_vertical);
-
-            //sets pheromone food amount on the new position
-            container_world[new_vertical][new_horizontal].sets_pheromone((*iter)->food_amt_and_reduce() , (*iter)->home_amt_and_reduce());
-        }
+//        else if(size_of_possible_moves > 0){
+//            // randomly selecting one of the possible moves NOT following a trail
+//
+//            // randomly selecting one of the possible moves
+//            int random_value = rand()%size_of_possible_moves;
+//            // new horizontal is one of the possible values
+//            new_horizontal = no_trail_horizontal_possible_moves.at(random_value);
+//            // new vertical is one of the possible values
+//            new_vertical = no_trail_vertical_possible_moves.at(random_value);
+//        }
+//
+//        // this is where the worker actually moves to a new container
+//        if(container_world[new_vertical][new_horizontal].current_state() == '.'){
+//            // save the current new position internally to the worker
+//            (*iter)->set_position(new_horizontal, new_vertical);
+//
+//            //sets pheromone food amount on the new position
+//            container_world[new_vertical][new_horizontal].sets_pheromone((*iter)->food_amt_and_reduce() , (*iter)->home_amt_and_reduce());
+//        }
     }
 };
 
@@ -544,7 +552,7 @@ public:
     This is the main program for the simulation
 */
 int main(){
-    const int worker_ants = 10;
+    const int worker_ants = 100;
     srand(time(NULL)); // sets up rand
 
     cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << endl;
