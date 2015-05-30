@@ -8,9 +8,9 @@
 #define array_height 50
 #define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
 #define food_amt 100 // 1 part per food_amt is food
-#define food_pheromone_amt 15
-#define home_pheromone_amt 15
-#define trail_length_amt 20
+#define food_pheromone_amt 30
+#define home_pheromone_amt 30
+#define trail_length_amt 50
 
 using namespace std;
 
@@ -120,6 +120,7 @@ public:
         this->food_pheromone = food_pheromone_amt;
         this->finding_food = false;
         this->trail_length = trail_length_amt;
+        this->home_pheromone = 0;
     }
 
     void is_finding_food(){
@@ -127,6 +128,7 @@ public:
         this->home_pheromone = home_pheromone_amt;
         this->finding_food = true;
         this->trail_length = trail_length_amt;
+        this->food_pheromone = 0;
     }
 
     void reduce_trail_length(){
@@ -494,15 +496,6 @@ public:
             for(int k=temp_vertical_position; k<=upper_temp_vertical; k++){
                 char temp_state = container_world[k][j].current_state();
                 if(temp_state != 'R'){
-                    if(temp_state == 'F'){
-                        (*iter)->touched_food();
-                        container_world[k][j].sets_pheromone(((*iter)->worker_food_amt()) , ((*iter)->worker_home_amt()));
-                    }
-                    else if(temp_state == 'H'){
-                        (*iter)->touched_home();
-                        container_world[k][j].sets_pheromone(((*iter)->worker_food_amt()) , ((*iter)->worker_home_amt()));
-                    }
-
                     if((food_or_home == 'F') && container_world[k][j].current_state() == 'F'){
                         //I'm looking for food and I've found food within one block
                         container_world[k][j].get_food(); // reduce the container food by one, pheromone set to zero, state set to '.'
@@ -516,6 +509,15 @@ public:
                         container_world[k][j].add_leaf_for_pickup(1); // leaf for pickup is added to the entrance container
                         (*iter)->is_finding_food(); // sets finding food to true
                         return;
+                    }
+
+                    if(temp_state == 'F'){
+                        (*iter)->touched_food();
+                        container_world[k][j].sets_pheromone(((*iter)->worker_food_amt()) , ((*iter)->worker_home_amt()));
+                    }
+                    else if(temp_state == 'H'){
+                        (*iter)->touched_home();
+                        container_world[k][j].sets_pheromone(((*iter)->worker_food_amt()) , ((*iter)->worker_home_amt()));
                     }
 
                     if(   !((*iter)->is_previous_position(j,k))  ){
@@ -584,7 +586,7 @@ public:
     This is the main program for the simulation
 */
 int main(){
-    const int worker_ants = 20;
+    const int worker_ants = 50;
     srand(time(NULL)); // sets up rand
 
     cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << endl;
@@ -595,12 +597,12 @@ int main(){
     system("cls");
 
 
-    int time_tick = 10000;
+    int time_tick = 1000;
     while(time_tick){
         world_ptr->tick();
         world_ptr->print(); // prints the world
         time_tick--;
-        Sleep(100);
+        Sleep(10);
         system("cls");
     }
 
