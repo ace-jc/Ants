@@ -8,8 +8,8 @@
 #define array_height 50
 #define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
 #define food_amt 100 // 1 part per food_amt is food
-#define food_pheromone_amt 60
-#define home_pheromone_amt 60
+#define food_pheromone_amt 30
+#define home_pheromone_amt 30
 #define trail_length_amt 100
 
 using namespace std;
