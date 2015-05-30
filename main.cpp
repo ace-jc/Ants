@@ -8,9 +8,10 @@
 #define array_height 50
 #define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
 #define food_amt 100 // 1 part per food_amt is food
-#define food_pheromone_amt 30
-#define home_pheromone_amt 30
-#define trail_length_amt 100
+#define food_pheromone_amt 60
+#define home_pheromone_amt 60
+#define trail_length_amt 50
+#define print_pheromones false
 
 using namespace std;
 
@@ -302,7 +303,7 @@ public:
     void create_ant_hill(){
         for(int i=0; i<array_width; i++){
             for(int j=0; j<array_height; j++){
-                if( (j == (array_width/2)) && (i == (array_height/2)) ){
+                if( (j == (array_width/2)) && (i == (array_height/2)) ){ // anthill is in the center of the map
                     // setting entrance of the ant hill with high pheromone amount
                     container_world[i][j].set_pheromone_home_amt(100000000);
                     container_world[i][j].set_entrance_true();
@@ -320,10 +321,10 @@ public:
         }
 
         // food in fixed spot for now
-        container_world[2][2].set_food((rand()%50)+1);
-        container_world[2][3].set_food((rand()%50)+1);
-        container_world[3][2].set_food((rand()%50)+1);
-        container_world[3][3].set_food((rand()%50)+1);
+        container_world[2][2].set_food(1000000);
+        container_world[2][3].set_food(1000000);
+        container_world[3][2].set_food(1000000);
+        container_world[3][3].set_food(1000000);
         container_world[2][2].set_state('F');
         container_world[2][3].set_state('F');
         container_world[3][2].set_state('F');
@@ -338,14 +339,19 @@ public:
         for(int i=0; i<array_width; i++){
             for(int j=0; j<array_height; j++){
                 if(container_world[i][j].current_state() == '.'){
-                    if((container_world[i][j].current_pheromone_food() > 0) && (container_world[i][j].current_pheromone_home() > 0)){
-                    cout << 'b';
-                    }
-                    else if((container_world[i][j].current_pheromone_food() == 0) && (container_world[i][j].current_pheromone_home() > 0)){
-                        cout << 'h';
-                    }
-                    else if((container_world[i][j].current_pheromone_food() > 0) && (container_world[i][j].current_pheromone_home() == 0)){
-                        cout << 'f';
+                    if(print_pheromones){
+                        if((container_world[i][j].current_pheromone_food() > 0) && (container_world[i][j].current_pheromone_home() > 0)){
+                        cout << 'b';
+                        }
+                        else if((container_world[i][j].current_pheromone_food() == 0) && (container_world[i][j].current_pheromone_home() > 0)){
+                            cout << 'h';
+                        }
+                        else if((container_world[i][j].current_pheromone_food() > 0) && (container_world[i][j].current_pheromone_home() == 0)){
+                            cout << 'f';
+                        }
+                        else{
+                            cout << container_world[i][j].current_state();
+                        }
                     }
                     else{
                         cout << container_world[i][j].current_state();
@@ -600,8 +606,8 @@ int main(){
     int time_tick = 1000;
     while(time_tick){
         world_ptr->tick();
-        world_ptr->print(); // prints the world
         time_tick--;
+        world_ptr->print(); // prints the world
         Sleep(10);
         system("cls");
     }
