@@ -10,7 +10,7 @@
 #define food_amt 100 // 1 part per food_amt is food
 #define food_pheromone_amt 60
 #define home_pheromone_amt 60
-#define trail_length_amt 50
+#define trail_length_amt 45
 #define print_pheromones false
 
 using namespace std;
