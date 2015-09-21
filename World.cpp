@@ -1,3 +1,12 @@
+/** @file World.cpp
+ *  @brief Implementation methods of World class
+ */
+
+#include <iostream>
+#include <stdlib.h>
+#include "World.h"
+
+using namespace std;
 
 //constructor
 World::World(){

@@ -1,3 +1,7 @@
+/** @file main.cpp
+ *  @brief Intial program file
+ */
+
 // --------
 // includes
 // --------
@@ -5,8 +9,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdlib.h>
-#include <vector>
 #include <unistd.h>
+#include <vector>
 #include "Abstract_ants.h"
 #include "Worker.h"
 #include "Containers.h"
@@ -18,31 +22,15 @@
 // -----------------------------
 #define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
 #define food_amt 100 // 1 part per food_amt is food
-#define food_pheromone_amt 60
-#define home_pheromone_amt 60
-#define trail_length_amt 45
-#define print_pheromones true
+
 
 using namespace std;
-
-
-// -------
-// Runants
-// -------
-void Runants(){
-    
-
-}
-
 
 // ----
 // Main
 // ----
 int main(){
     // This is the main function for the simulation
-    // Calling Runants control loop
-    // void Runants();
-
 
     // Application function loop
     const int worker_ants = 50;
@@ -67,10 +55,8 @@ int main(){
 
         struct timespec tim, tim2;
         tim.tv_sec = 0;
-        tim.tv_nsec = 20000000;
-
+        tim.tv_nsec = 80000000;
         nanosleep(&tim , &tim2);
-
         system("cls");
     }
 

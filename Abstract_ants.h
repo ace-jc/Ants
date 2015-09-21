@@ -1,6 +1,7 @@
 /** @file Abstract_ants.h
- *  @brief Implementation details of functions in
+ *  @brief Definition of Abstract_ants class
  */
+
 #ifndef ABSTRACT_ANTS_H
 #define ABSTRACT_ANTS_H
 

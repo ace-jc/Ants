@@ -1,5 +1,5 @@
-/** @file Abstract_ants.h
- *  @brief Implementation details of functions in
+/** @file Abstract_ants.cpp
+ *  @brief Implementation methods of Abstract_ants class
  */
 
 #include <iostream>
@@ -10,6 +10,7 @@
 #include <vector>
 #include "Abstract_ants.h"
 
+using namespace std;
 
 Abstract_ants::Abstract_ants(){
     internal_pheromone = 0;

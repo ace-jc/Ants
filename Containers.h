@@ -1,3 +1,7 @@
+/** @file Containers.h
+ *  @brief Definition of Container class
+ */
+
 #ifndef CONTAINERS_H
 #define CONTAINERS_H
 

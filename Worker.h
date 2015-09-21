@@ -1,6 +1,15 @@
+/** @file Worker.h
+ *  @brief Definition of Worker class
+ */
 
 #ifndef WORKER_H
 #define WORKER_H
+
+#include "Abstract_ants.h"
+
+#define home_pheromone_amt 60
+#define trail_length_amt 45
+#define food_pheromone_amt 60
 
 /*
     This is a specific type of ant. It is a worker ant.
@@ -14,32 +23,18 @@ class Worker: public Abstract_ants{
 
 public:
     Worker();
-
     void set_food_carry(int amt);
-
     int current_food_being_carried();
-
     char ant_letter();
-
     void not_finding_food();
-
     void is_finding_food();
-
     void reduce_trail_length();
-
     void touched_food();
-
     void touched_home();
-
     int worker_food_amt();
-
     int worker_home_amt();
-
     bool finding_food_status();
-
-    Worker return_itself(){
-        return *this;
-    }
+    Worker return_itself();
 };
 
 #endif

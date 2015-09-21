@@ -1,3 +1,6 @@
+/** @file Containers.cpp
+ *  @brief Implementation methods of Container class
+ */
 
 #include <iostream>
 #include <stdlib.h>
@@ -6,6 +9,8 @@
 #include <unistd.h>
 #include <vector>
 #include "Containers.h"
+
+using namespace std;
 
 Containers::Containers(){
     // Constructor

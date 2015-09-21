@@ -1,6 +1,16 @@
+/** @file Worker.cpp
+ *  @brief Implementation methods of Worker class
+ */
 
-
+#include <iostream>
+#include <stdlib.h>
+#include <time.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <vector>
 #include "Worker.h"
+
+using namespace std;
 
 Worker::Worker(){
     finding_food = true;
