@@ -1,17 +1,11 @@
-#ifndef CONTAINERS_H
-#define CONTAINERS_H
 
-#include "Abstract_ants.h"
-#include "Worker.h"
+#include <iostream>
+#include <stdlib.h>
+#include <time.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <vector>
 #include "Containers.h"
-#include "World.h"
-
-
-/*
-    The containers class will hold the information pertaining to the array
-    grid. Each grid block contains a container which contains several different
-    piece of information about the simulation.
-*/
 
 Containers::Containers(){
     // Constructor

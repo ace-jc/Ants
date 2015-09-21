@@ -1,5 +1,7 @@
 
 
+#include "Worker.h"
+
 Worker::Worker(){
     finding_food = true;
     food_being_carried = 0;

@@ -16,8 +16,6 @@
 // -----------------------------
 // define prepocessor directives
 // -----------------------------
-#define array_width 50
-#define array_height 50
 #define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
 #define food_amt 100 // 1 part per food_amt is food
 #define food_pheromone_amt 60
@@ -27,8 +25,15 @@
 
 using namespace std;
 
-// Function Prototype
-void Runants();
+
+// -------
+// Runants
+// -------
+void Runants(){
+    
+
+}
+
 
 // ----
 // Main
@@ -36,16 +41,9 @@ void Runants();
 int main(){
     // This is the main function for the simulation
     // Calling Runants control loop
-    void Runants();
-
-    return 0;
-}
+    // void Runants();
 
 
-// -------
-// Runants
-// -------
-void Runants(){
     // Application function loop
     const int worker_ants = 50;
     srand(time(NULL)); // sets up rand
@@ -71,11 +69,7 @@ void Runants(){
         tim.tv_sec = 0;
         tim.tv_nsec = 20000000;
 
-        if(nanosleep(&tim , &tim2) < 0 )   
-        {
-            cout << "Nano sleep system call failed \n" << endl;
-            return -1;
-        }
+        nanosleep(&tim , &tim2);
 
         system("cls");
     }
@@ -83,4 +77,5 @@ void Runants(){
     cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << " - HALTED POSITION!!!" << endl;
     world_ptr->print(); // prints the world
 
-};
+    return 0;
+}
