@@ -1,4 +1,10 @@
+#ifndef WORLD_H
+#define WORLD_H
 
+#include "Abstract_ants.h"
+#include "Worker.h"
+#include "Containers.h"
+#include "World.h"
 
 
 /*
@@ -305,3 +311,5 @@ public:
         }
     }
 };
+
+#endif

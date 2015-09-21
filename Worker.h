@@ -1,5 +1,6 @@
 
-
+#ifndef WORKER_H
+#define WORKER_H
 
 /*
     This is a specific type of ant. It is a worker ant.
@@ -12,81 +13,33 @@ class Worker: public Abstract_ants{
     int trail_length;
 
 public:
-    Worker(){
-        finding_food = true;
-        food_being_carried = 0;
-        food_pheromone = 0; // initially looking for food
-        home_pheromone = home_pheromone_amt; // initially at home
-        trail_length = trail_length_amt;
-    }
+    Worker();
 
-    void set_food_carry(int amt){
-        // sets the amount of food being carried
-        this->food_being_carried = amt;
-    }
+    void set_food_carry(int amt);
 
-    int current_food_being_carried(){
-        return this->food_being_carried;
-    }
+    int current_food_being_carried();
 
-    char ant_letter(){
-        return 'W';
-    }
+    char ant_letter();
 
-    void not_finding_food(){
-        // leaving a trail of food pheromones
-        this->food_pheromone = food_pheromone_amt;
-        this->finding_food = false;
-        this->trail_length = trail_length_amt;
-        this->home_pheromone = 0;
-    }
+    void not_finding_food();
 
-    void is_finding_food(){
-        // leaving a trail of home pheromones
-        this->home_pheromone = home_pheromone_amt;
-        this->finding_food = true;
-        this->trail_length = trail_length_amt;
-        this->food_pheromone = 0;
-    }
+    void is_finding_food();
 
-    void reduce_trail_length(){
-        this->trail_length -= 1;
-    }
+    void reduce_trail_length();
 
-    void touched_food(){
-        this->trail_length = trail_length_amt;
-        this->food_pheromone = food_pheromone_amt;
-    }
+    void touched_food();
 
-    void touched_home(){
-        this->trail_length = trail_length_amt;
-        this->home_pheromone = home_pheromone_amt;
-    }
+    void touched_home();
 
-    int worker_food_amt(){
-        if(trail_length > 0){
-            return this->food_pheromone;
-        }
-        else{
-            return 0;
-        }
+    int worker_food_amt();
 
-    }
+    int worker_home_amt();
 
-    int worker_home_amt(){
-        if(trail_length > 0){
-            return this->home_pheromone;
-        }
-        else{
-            return 0;
-        }
-    }
-
-    bool finding_food_status(){
-        return finding_food;
-    }
+    bool finding_food_status();
 
     Worker return_itself(){
         return *this;
     }
 };
+
+#endif

@@ -1,31 +1,13 @@
 /** @file Abstract_ants.h
  *  @brief Implementation details of functions in
  */
+#ifndef ABSTRACT_ANTS_H
+#define ABSTRACT_ANTS_H
 
-// --------
-// includes
-// --------
-#include <iostream>
-#include <stdlib.h>
-#include <time.h>
-#include <vector>
-#include <unistd.h>
-
-
-// -----------------------------
-// define prepocessor directives
-// -----------------------------
-#define array_width 50
-#define array_height 50
-#define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
-#define food_amt 100 // 1 part per food_amt is food
-#define food_pheromone_amt 60
-#define home_pheromone_amt 60
-#define trail_length_amt 45
-#define print_pheromones true
-
-using namespace std;
-
+#include "Abstract_ants.h"
+#include "Worker.h"
+#include "Containers.h"
+#include "World.h"
 /*
     This is an abstract data type that will handle all types of ant
     variables.
@@ -94,3 +76,5 @@ public:
         return this->vertical_pos;
     }
 };
+
+#endif

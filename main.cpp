@@ -1,18 +1,34 @@
+// --------
+// includes
+// --------
+#include <iostream>
+#include <stdlib.h>
+#include <time.h>
+#include <stdlib.h>
+#include <vector>
+#include <unistd.h>
+#include "Abstract_ants.h"
+#include "Worker.h"
+#include "Containers.h"
+#include "World.h"
 
 
+// -----------------------------
+// define prepocessor directives
+// -----------------------------
+#define array_width 50
+#define array_height 50
+#define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
+#define food_amt 100 // 1 part per food_amt is food
+#define food_pheromone_amt 60
+#define home_pheromone_amt 60
+#define trail_length_amt 45
+#define print_pheromones true
 
+using namespace std;
 
-#ifndef Abstract_ants_h
-#define Abstract_ants_h
-
-#ifndef Worker_h
-#define Worker_h
-
-#ifndef Containers_h
-#define Containers_h
-
-#ifndef World_h
-#define World_h
+// Function Prototype
+void Runants();
 
 // ----
 // Main
@@ -26,8 +42,6 @@ int main(){
 }
 
 
-
-
 // -------
 // Runants
 // -------
@@ -37,9 +51,12 @@ void Runants(){
     srand(time(NULL)); // sets up rand
 
     cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << endl;
-    World *world_ptr = new World(); // creates the world in the heap and assigns the pointer to its location
-    world_ptr->add_workers(worker_ants); // adds num workers to the world
-    world_ptr->print(); // prints the world
+    // creates the world in the heap and assigns the pointer to its location
+    World *world_ptr = new World(); 
+    // adds num workers to the world
+    world_ptr->add_workers(worker_ants); 
+    // prints the world
+    world_ptr->print(); 
     sleep(2);
     system("cls");
 
