@@ -22,7 +22,7 @@
 // -----------------------------
 #define ant_hill_rock 10 // 1 part per ant_hill_rock is rock in ant hill
 #define food_amt 100 // 1 part per food_amt is food
-
+#define frame_count 1000
 
 using namespace std;
 
@@ -44,10 +44,10 @@ int main(){
     // prints the world
     world_ptr->print(); 
     sleep(2);
-    system("cls");
+    system("clear");
 
 
-    int time_tick = 10000;
+    int time_tick = frame_count;
     while(time_tick){
         world_ptr->tick();
         time_tick--;
@@ -57,7 +57,7 @@ int main(){
         tim.tv_sec = 0;
         tim.tv_nsec = 80000000;
         nanosleep(&tim , &tim2);
-        system("cls");
+        system("clear");
     }
 
     cout << "\t\t\tA " << array_width << "x" << array_height <<" Ant World" << " - HALTED POSITION!!!" << endl;
