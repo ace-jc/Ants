@@ -1,7 +1,6 @@
 /** @file Worker.cpp
  *  @brief Implementation methods of Worker class
  */
-
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
